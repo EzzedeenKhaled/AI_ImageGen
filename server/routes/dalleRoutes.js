@@ -8,7 +8,7 @@ const router = express.Router()
 router.route('/').post(async (req, res) => {
     try {
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers",
+            "https://router.huggingface.co/nscale/v1/images/generations",
             {
                 headers: {
                     Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
@@ -19,11 +19,14 @@ router.route('/').post(async (req, res) => {
             }
         );
 
-        // Get the image as a Blob
-        const blob = await response.blob();
-        const buffer = Buffer.from(await blob.arrayBuffer());
-        const base64Image = buffer.toString('base64'); // Convert to Base64 string
-        res.json({ image: `data:${blob.type};base64,${base64Image}` }); // Send Base64 data
+        if (!response.ok) {
+            // Log the error from the external API itself
+            const errorText = await response.text();
+            throw new Error(`Hugging Face API Error: ${response.status} - ${errorText}`);
+        }
+        const hfData = await response.json();            // Parse JSON
+        const base64Image = hfData.data[0].b64_json;    // Extract actual image
+        res.json({ image: `data:image/png;base64,${base64Image}` }); // Send proper Base64 image
     } catch (error) {
         console.error(error);
         res.status(500).send(error?.message || 'An error occurred');

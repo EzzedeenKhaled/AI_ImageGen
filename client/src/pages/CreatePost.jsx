@@ -25,7 +25,8 @@ const CreatePost = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            inputs: form.prompt, // Ensure the structure matches the API expectations
+            prompt: form.prompt, // Ensure the structure matches the API expectations
+            model: `${import.meta.env.VITE_MODEL}`
           }),
         });
 
@@ -33,7 +34,7 @@ const CreatePost = () => {
           throw new Error('Failed to generate image');
         }
         const data = await response.json(); // Parse JSON
-
+        console.log("Generated Image Data:", data.image);
         // Update the form state with the image URL
         setForm({ ...form, photo: data.image });
       } catch (error) {
